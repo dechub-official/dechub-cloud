@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: dechub-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm run start -w @dechub/api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: WEB_URL
+        value: https://cloud.dechub.ai
+      - key: INBOUND_ALLOWED_ORIGINS
+        value: https://dechub.in,https://www.dechub.in,https://bridge.dechub.ai
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: Dechub Cloud <no-reply@dechub.ai>

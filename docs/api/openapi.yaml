@@ -1,0 +1,331 @@
+openapi: 3.0.3
+info:
+  title: Dechub Cloud API
+  version: 0.1.0
+  description: |
+    REST API for Dechub CRM. All paths are under /api/v1.
+    Session: httpOnly cookie dch_session set by /auth/login. Website forms use the x-api-key header.
+    Errors: { error: { code, message, fields? } } with the matching HTTP status.
+servers:
+  - url: https://cloud.dechub.ai/api/v1
+  - url: http://localhost:4000/api/v1
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: dch_session
+    formKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+security:
+  - session: []
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: "Log in and set the session cookie"
+      description: "Role: public"
+      security: []
+      responses:
+        '200': { description: OK }
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: "Clear the session cookie"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: "Current user and organization; also the presence heartbeat"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /auth/invite/{token}:
+    get:
+      tags: [auth]
+      summary: "Read an invite before accepting"
+      description: "Role: public"
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /auth/accept-invite:
+    post:
+      tags: [auth]
+      summary: "Set a password from an invite link"
+      description: "Role: public"
+      security: []
+      responses:
+        '200': { description: OK }
+  /auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: "Email a reset link"
+      description: "Role: public"
+      security: []
+      responses:
+        '200': { description: OK }
+  /auth/reset-password:
+    post:
+      tags: [auth]
+      summary: "Set a new password from a reset link"
+      description: "Role: public"
+      security: []
+      responses:
+        '200': { description: OK }
+  /users:
+    get:
+      tags: [users]
+      summary: "List teammates"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /users/invite:
+    post:
+      tags: [users]
+      summary: "Invite a user"
+      description: "Role: admin"
+      responses:
+        '200': { description: OK }
+  /users/{id}/resend-invite:
+    post:
+      tags: [users]
+      summary: "Send an invite again"
+      description: "Role: admin"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /users/{id}:
+    patch:
+      tags: [users]
+      summary: "Change role, deactivate (optionally reassign) or reactivate"
+      description: "Role: admin"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /org:
+    get:
+      tags: [org]
+      summary: "Organization settings"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+    patch:
+      tags: [org]
+      summary: "Update name, default owner, default market"
+      description: "Role: admin"
+      responses:
+        '200': { description: OK }
+  /org/api-key:
+    post:
+      tags: [org]
+      summary: "Generate a new website form key (shown once)"
+      description: "Role: admin"
+      responses:
+        '200': { description: OK }
+  /org/audit-logs:
+    get:
+      tags: [org]
+      summary: "Audit trail, paginated"
+      description: "Role: admin"
+      responses:
+        '200': { description: OK }
+  /leads:
+    get:
+      tags: [leads]
+      summary: "List leads: q, stage, source, owner, market, businessLine, service, from, to, sort, dir, page, pageSize"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [leads]
+      summary: "Create a lead (409 on duplicate unless allowDuplicate)"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /leads/check-duplicate:
+    get:
+      tags: [leads]
+      summary: "Find a lead with the same email or phone"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /leads/bulk:
+    post:
+      tags: [leads]
+      summary: "Bulk change owner or stage; delete is admin only"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /leads/{id}:
+    get:
+      tags: [leads]
+      summary: "Read a lead"
+      description: "Role: any"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    patch:
+      tags: [leads]
+      summary: "Update fields, stage (lostReason required for lost) or owner"
+      description: "Role: any"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [leads]
+      summary: "Soft delete"
+      description: "Role: admin"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /leads/{leadId}/activities:
+    get:
+      tags: [leads]
+      summary: "Timeline"
+      description: "Role: any"
+      parameters:
+        - name: leadId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [leads]
+      summary: "Add a note or contact log"
+      description: "Role: any"
+      parameters:
+        - name: leadId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /tasks:
+    get:
+      tags: [tasks]
+      summary: "Follow-ups: scope (mine|team), window (today|overdue|upcoming|open|all), leadId, todayEnd"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [tasks]
+      summary: "Create a follow-up"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /tasks/summary:
+    get:
+      tags: [tasks]
+      summary: "Overdue and today counts for the current user"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /tasks/{id}:
+    patch:
+      tags: [tasks]
+      summary: "complete | reschedule | cancel | reassign"
+      description: "Role: any"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /companies:
+    get:
+      tags: [companies]
+      summary: "List or search companies with lead counts"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [companies]
+      summary: "Create a company"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /companies/{id}:
+    get:
+      tags: [companies]
+      summary: "Company with its leads"
+      description: "Role: any"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /pipeline:
+    get:
+      tags: [pipeline]
+      summary: "Leads grouped by stage with counts and value per currency"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /dashboard:
+    get:
+      tags: [dashboard]
+      summary: "Key numbers, stage and source breakdowns, overdue list, leaderboard"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /imports/preview:
+    post:
+      tags: [imports]
+      summary: "Parse a CSV (multipart field 'file') and suggest a mapping"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /imports:
+    post:
+      tags: [imports]
+      summary: "Run an import: multipart 'file', 'mapping' JSON, 'defaults' JSON"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+    get:
+      tags: [imports]
+      summary: "Import history"
+      description: "Role: any"
+      responses:
+        '200': { description: OK }
+  /inbound/leads:
+    post:
+      tags: [inbound]
+      summary: "Website form capture, header x-api-key"
+      description: "Role: api key"
+      security: [{ formKey: [] }]
+      responses:
+        '200': { description: OK }
