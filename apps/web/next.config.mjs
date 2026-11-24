@@ -1,5 +1,23 @@
+const configuredApiUrl = process.env.API_URL?.trim();
+if (process.env.VERCEL && !configuredApiUrl) {
+  throw new Error('Set API_URL in the Vercel environment for this deployment, then rebuild.');
+}
+
+const apiTarget = new URL(configuredApiUrl || 'http://localhost:4000');
+if (process.env.VERCEL && (
+  apiTarget.protocol !== 'https:' ||
+  ['localhost', '127.0.0.1', '[::1]'].includes(apiTarget.hostname) ||
+  apiTarget.hostname.endsWith('.internal')
+)) {
+  throw new Error('API_URL must be the public HTTPS URL of your Render API.');
+}
+if (apiTarget.pathname !== '/' || apiTarget.search || apiTarget.hash || apiTarget.username || apiTarget.password) {
+  throw new Error('API_URL must be a base URL without a path, query, or credentials.');
+}
+const API_URL = apiTarget.origin;
+if (process.env.VERCEL) console.info(`API proxy target: ${API_URL}`);
+
 /** @type {import('next').NextConfig} */
-const API_URL = process.env.API_URL || 'http://localhost:4000';
 
 const nextConfig = {
   reactStrictMode: true,
