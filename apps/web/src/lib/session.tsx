@@ -22,10 +22,17 @@ const HEARTBEAT_MS = 60_000;
  */
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const refresh = useCallback(async () => {
-    const data = await api<Session>('/auth/me');
-    setSession(data);
+    setLoadError(false);
+    try {
+      const data = await api<Session>('/auth/me', { signal: AbortSignal.timeout(30_000) });
+      setSession(data);
+    } catch (error) {
+      setLoadError(true);
+      throw error;
+    }
   }, []);
 
   useEffect(() => {
@@ -43,8 +50,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   if (!session) {
     return (
-      <div className="grid min-h-screen place-items-center bg-aubergine-deep">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brass-light border-t-transparent" />
+      <div className="grid min-h-screen place-items-center bg-canvas px-6 text-ink">
+        {loadError ? (
+          <div role="alert" className="max-w-sm text-center">
+            <h1 className="text-xl font-semibold">Unable to connect to the CRM</h1>
+            <p className="mt-2 text-ink-soft">The server may be starting or temporarily unavailable. Please try again.</p>
+            <button className="btn-primary mt-5" onClick={() => { void refresh().catch(() => {}); }}>Try again</button>
+          </div>
+        ) : (
+          <div role="status" aria-label="Loading your session" className="h-8 w-8 animate-spin rounded-full border-2 border-orchid border-t-transparent" />
+        )}
       </div>
     );
   }

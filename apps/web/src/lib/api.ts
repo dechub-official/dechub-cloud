@@ -26,12 +26,13 @@ export function qs(query?: Query) {
 
 export async function api<T = any>(
   path: string,
-  opts: { method?: string; body?: unknown; form?: FormData; query?: Query; redirectOn401?: boolean } = {},
+  opts: { method?: string; body?: unknown; form?: FormData; query?: Query; redirectOn401?: boolean; signal?: AbortSignal } = {},
 ): Promise<T> {
   const { method = 'GET', body, form, query, redirectOn401 = true } = opts;
   const res = await fetch(`/api/v1${path}${qs(query)}`, {
     method,
     credentials: 'include',
+    signal: opts.signal,
     headers: form ? undefined : body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: form ?? (body !== undefined ? JSON.stringify(body) : undefined),
   });
